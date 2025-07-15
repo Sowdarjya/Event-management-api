@@ -12,8 +12,8 @@ const app = express();
 
 app.use(express.json());
 
-app.use("/users", userRoutes);
-app.use("/events", eventRoutes);
+app.use("/api/users", userRoutes);
+app.use("/api/events", eventRoutes);
 
 pool
   .connect()
