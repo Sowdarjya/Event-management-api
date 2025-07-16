@@ -2,6 +2,7 @@ import express from "express";
 import {
   createEvent,
   getEventDetails,
+  getEventStats,
   getUpcomingEvents,
   registerForEvent,
   unregisterFromEvent,
@@ -14,5 +15,6 @@ router.get("/get-event-details/:id", getEventDetails);
 router.post("/:id/register", registerForEvent);
 router.delete("/:id/unregister", unregisterFromEvent);
 router.get("/upcoming-events", getUpcomingEvents);
+router.get("/get-event-stats/:id", getEventStats);
 
 export default router;

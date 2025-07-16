@@ -233,3 +233,38 @@ export const getUpcomingEvents = async (req, res) => {
     return res.status(500).json({ message: error.message });
   }
 };
+
+export const getEventStats = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!id) {
+      return res.status(400).json({ message: "Event ID is required" });
+    }
+
+    const eventResult = await pool.query(
+      `SELECT capacity, registrations FROM events WHERE id = $1`,
+      [id]
+    );
+
+    if (eventResult.rows.length === 0) {
+      return res.status(404).json({ message: "Event not found" });
+    }
+
+    const event = eventResult.rows[0];
+    const capacity = event.capacity;
+    const registrations = event.registrations || [];
+    const totalRegistrations = registrations.length;
+    const remainingCapacity = capacity - totalRegistrations;
+    const percentageUsed = ((totalRegistrations / capacity) * 100).toFixed(2);
+
+    res.json({
+      total_registrations: totalRegistrations,
+      remaining_capacity: remainingCapacity,
+      percentage_used: parseFloat(percentageUsed),
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ message: error.message });
+  }
+};
