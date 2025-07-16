@@ -205,3 +205,31 @@ export const unregisterFromEvent = async (req, res) => {
     return res.status(500).json({ message: error.message });
   }
 };
+
+export const getUpcomingEvents = async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT id, title, date_time, location, capacity, registrations, created_at
+      FROM events
+      WHERE date_time > NOW()
+      ORDER BY date_time ASC, location ASC
+    `);
+
+    const events = result.rows.map((event) => ({
+      id: event.id,
+      title: event.title,
+      date_time: event.date_time,
+      location: event.location,
+      capacity: event.capacity,
+      created_at: event.created_at,
+      current_registrations: (event.registrations || []).length,
+    }));
+
+    res.json({
+      events: events,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ message: error.message });
+  }
+};
