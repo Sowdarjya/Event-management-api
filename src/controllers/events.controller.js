@@ -140,7 +140,7 @@ export const registerForEvent = async (req, res) => {
     registrations.push(newRegistration);
 
     await pool.query(`UPDATE events SET registrations = $1 WHERE id = $2`, [
-      registrations,
+      JSON.stringify(registrations),
       id,
     ]);
 
@@ -149,6 +149,59 @@ export const registerForEvent = async (req, res) => {
       .json({ message: "User registered for event successfully" });
   } catch (error) {
     console.error(error);
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+export const unregisterFromEvent = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { user_id } = req.body;
+
+    if (!id) {
+      return res.status(400).json({ message: "Event ID is required" });
+    }
+
+    if (!user_id) {
+      return res.status(400).json({ message: "User ID is required" });
+    }
+
+    const eventResult = await pool.query(`SELECT * FROM events WHERE id = $1`, [
+      id,
+    ]);
+
+    if (eventResult.rows.length === 0) {
+      return res.status(404).json({ message: "Event not found" });
+    }
+
+    const event = eventResult.rows[0];
+    const registrations = event.registrations || [];
+
+    const registrationIndex = registrations.findIndex(
+      (registration) => registration.id === user_id
+    );
+
+    if (registrationIndex === -1) {
+      return res
+        .status(400)
+        .json({ message: "User is not registered for this event" });
+    }
+
+    registrations.splice(registrationIndex, 1);
+
+    const updatedRegistrations =
+      registrations.length > 0 ? registrations : null;
+
+    await pool.query(`UPDATE events SET registrations = $1 WHERE id = $2`, [
+      updatedRegistrations,
+      id,
+    ]);
+
+    return res
+      .status(200)
+      .json({ message: "User unregistered from event successfully" });
+  } catch (error) {
+    console.log(error);
     return res.status(500).json({ message: error.message });
   }
 };
